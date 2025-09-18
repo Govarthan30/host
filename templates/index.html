@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flask + Gemini Demo</title>
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #2b1055, #7597de);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .container h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #ffda79;
+      text-shadow: 0 0 10px rgba(255,218,121,0.8);
+    }
+
+    .input-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .input-box input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      outline: none;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .input-box input::placeholder {
+      color: #ddd;
+    }
+
+    .input-box button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff512f, #dd2476);
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-box button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(221,36,118,0.5);
+    }
+
+    .answer-box {
+      text-align: left;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.3);
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    /* Loader animation */
+    .loader {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      margin: 20px auto;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    /* Scrollbar */
+    .answer-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .answer-box::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.5);
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ Ask Gemini</h1>
+    <div class="input-box">
+      <input type="text" id="question" placeholder="Type your question...">
+      <button onclick="askGemini()">Ask</button>
+    </div>
+    <div class="loader" id="loader"></div>
+    <div class="answer-box" id="answer"></div>
+  </div>
+
+  <script>
+    async function askGemini() {
+      const question = document.getElementById("question").value;
+      const answerBox = document.getElementById("answer");
+      const loader = document.getElementById("loader");
+
+      if (!question.trim()) {
+        answerBox.innerHTML = "<b>Please enter a question 🙏</b>";
+        return;
+      }
+
+      answerBox.innerHTML = "";
+      loader.style.display = "block";
+
+      try {
+  const response = await fetch("http://127.0.0.1:5000/ask", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({question})
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();  // read raw error
+    throw new Error(`Server returned ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  loader.style.display = "none";
+
+  if (data.answer) {
+    answerBox.innerHTML = `<b>Gemini:</b> ${data.answer}`;
+  } else {
+    answerBox.innerHTML = `<span style="color:red;">Error: ${data.error}</span>`;
+  }
+} catch (error) {
+  loader.style.display = "none";
+  answerBox.innerHTML = `<span style="color:red;">Error: ${error}</span>`;
+}
+    }
+  </script>
+</body>
+</html>
